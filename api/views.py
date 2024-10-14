@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from ninja import NinjaAPI, Schema
-from main.models import Sample, Read_Pair
+from main.models import Sample, Read_Pair, Sample_Metadata
 
 api = NinjaAPI()
 
@@ -26,4 +26,20 @@ def receive_paths(request, payload: PathSchema):
     
     except Sample.DoesNotExist:
         return {"success": False, "message": "Sample ID not found!"}
+    
+
+@api.get("/get-cell-type/")
+def get_cell_type(request, sample_id: str):
+    try:
+        metadata_obj = Sample_Metadata.objects.get(sample_id__sample_id=sample_id)
+        metadata_dict = metadata_obj.metadata
+
+        # Extract the cell type from the metadata
+        cell_type = metadata_dict.get("Cell_Line", "Unknown") 
+
+        return {"success": True, "sample_id": sample_id, "cell_type": cell_type}
+    
+    except Sample_Metadata.DoesNotExist:
+        return {"success": False, "message": "Sample ID not found"}
+    
 
