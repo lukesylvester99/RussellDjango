@@ -23,9 +23,9 @@ class Read_Pair(models.Model):
 class Titer(models.Model):
     sample_id = models.ForeignKey(Sample, on_delete=models.CASCADE)
     sequencing_run = models.CharField(max_length=255)
-    wri_mean_depth = models.CharField(max_length=255)
-    dmel_mean_depth = models.CharField(max_length=255)
-    wri_titer = models.CharField(max_length=255)
+    wri_mean_depth = models.IntegerField()
+    dmel_mean_depth = models.IntegerField()
+    wri_titer = models.IntegerField()
     total_reads = models.IntegerField()
     mapped_reads = models.IntegerField()
     duplicate_reads = models.IntegerField()

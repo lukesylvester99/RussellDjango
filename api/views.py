@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from ninja import NinjaAPI, Schema
-from main.models import Sample, Read_Pair, Sample_Metadata
+from main.models import Sample, Read_Pair, Sample_Metadata, Titer
 
 api = NinjaAPI()
 
@@ -43,3 +43,59 @@ def get_cell_type(request, sample_id: str):
         return {"success": False, "message": "Sample ID not found"}
     
 
+class TiterSchema(Schema):
+    sample_id: str
+    sequencing_run: str
+    wri_mean_depth: int
+    dmel_mean_depth: int
+    wri_titer: int
+    total_reads: int
+    mapped_reads: int
+    duplicate_reads: int
+    wmel_mean_depth: int
+    wwil_mean_depth: int
+    wmel_titer: int
+    wwil_titer: int
+    dsim_mean_depth: int
+
+@api.post("/receive-titer/")
+def receive_paths(request, payload: TiterSchema):
+    try:
+        # Extract values from the payload
+        sample_id = payload.sample_id
+        sequencing_run = payload.sequencing_run
+        wri_mean_depth = payload.wri_mean_depth
+        dmel_mean_depth = payload.dmel_mean_depth
+        wri_titer = payload.wri_titer
+        total_reads = payload.total_reads
+        mapped_reads = payload.mapped_reads
+        duplicate_reads = payload.duplicate_reads
+        wmel_mean_depth = payload.wmel_mean_depth
+        wwil_mean_depth = payload.wwil_mean_depth
+        wmel_titer = payload.wmel_titer
+        wwil_titer = payload.wwil_titer
+        dsim_mean_depth = payload.dsim_mean_depth
+
+        sample = Sample.objects.get(sample_id=sample_id)
+        titer, created = Titer.objects.update_or_create(
+            sample_id=sample,
+            defaults={
+                        "sequencing_run": sequencing_run,
+                        "wri_mean_depth": wri_mean_depth,
+                        "dmel_mean_depth": dmel_mean_depth,
+                        "wri_titer": wri_titer,
+                        "total_reads": total_reads,
+                        "mapped_reads": mapped_reads,
+                        "duplicate_reads": duplicate_reads,
+                        "wmel_mean_depth": wmel_mean_depth,
+                        "wwil_mean_depth": wwil_mean_depth,
+                        "wmel_titer": wmel_titer,
+                        "wwil_titer": wwil_titer,
+                        "dsim_mean_depth": dsim_mean_depth
+                    }
+        )
+        return {"success": True, "message": "Titers received and saved!"}
+    
+    except Sample.DoesNotExist:
+        return {"success": False, "message": "Sample ID not found!"}
+    
