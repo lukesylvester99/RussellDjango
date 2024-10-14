@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+    {% block content %}
+
+        <div class="filtered_samples_header">
+            <div class="in_exp_header">
+                <h1 id="filtered_samples_header_message">Filtered Samples</h1>
+                <h4 id="samples_in_exp_header2">read paths will be exported to the CSV file</h4>
+            </div>
+            <div class="filter_btns">
+                <a class="btn" href="{% url 'home' %}">Back to home</a>
+                
+                <!-- Hidden fields to pass the filter criteria -->
+                <div class="export_csv">
+                    <form method="GET" action="{% url 'export_csv_query' %}">
+                        <input type="hidden" name="cell_line" value="{{ cell_line }}">
+                        <input type="hidden" name="infection_status" value="{{ infection }}">
+                        <input type="hidden" name="start_date" value="{{ start_date }}">
+                        <input type="hidden" name="end_date" value="{{ end_date }}">
+                        <input type="hidden" name="users" value="{{ users }}">
+                        <input type="hidden" name="plate_num" value="{{ plate_num }}">
+                        
+                        <button class="btn" type="submit">Export as CSV</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Sample ID</th>
+                    <th>Sample Label</th>
+                    <th>Created Date</th>
+                    <th>Cell Line</th>
+                    <th>Infection Status</th>
+                    <th>Plate Number</th>
+                </tr>
+            </thead>
+            <tbody id="filtered_samples_body">
+                {% for sample in samples %}
+                    <tr>
+                        <td>{{ sample.sample_id }}</td>
+                        
+                        <td>{{ sample.sample_label }}</td>
+
+                        <td>{{ sample.created_date }}</td>
+                        
+                        <!-- Access the related metadata -->
+                        <td>
+                            {% for meta in metadata %}
+                                {% if meta.sample_id == sample %}
+                                    {{ meta.metadata.Cell_Line }}
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        
+                        <!-- Access the related infection status -->
+                        <td>
+                            {% for meta in metadata %}
+                                {% if meta.sample_id == sample %}
+                                    {{ meta.metadata.Infection }}
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+        
+                        <!-- Access the related plate number -->
+                        <td>
+                            {% for pair in read_pairs %}
+                                {% if pair.sample_id == sample %}
+                                    {{ pair.plate_number }}
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4">No samples found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+    {% endblock %}

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+    {% block content %}
+    <div class="welcome">
+        <div class="form_alignment">
+        <div class="experiments">
+
+            <h3 id="welcome_message2">Select from active experiments</h4>
+                <div class="experiments_listed">
+                    <form method="POST" action="{% url 'samples_by_experiment' %}" name="exp_selection" class="exp-selection-form">
+                        {% csrf_token %}
+                        <ul class = 'exp_list'>
+                            {% for experiment in experiments %}
+                                <li class="item">
+                                    <label  for="exp_{{ loop.index }}">{{ experiment }}</label>
+                                    <input class='item' type="radio" id="exp_{{ loop.index }}" name="exp_selection" value="{{ experiment }}" required>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                </div>
+        </div>
+                        <!-- Submit button to submit the form -->
+                <input id="submit_btn" type="submit" value="Select">
+                </form>
+        </div>
+    </div>
+    
+
+         <!--connects to db and allows user to build a custom filter-->
+    <div class="query_db">
+            <h1 id="filter_header">Create Custom Filter</h1>
+            <h5> Please remember to refresh between queries</h5>
+            <br>
+            <form class='query_db_form'method="POST" action="{% url 'filter_samples' %}">
+                {% csrf_token %}
+                
+                <!-- Cell Line Filter -->
+                <div>
+                    <select name="cell_line" id="cell_line">
+                        <option style="color: #6200EE; font: bolder; font-size: larger;" value="">Cell Line</option>
+                        {% for cell_line in cell_lines %}
+                            {% if cell_line %}
+                                <option value="{{ cell_line }}" >
+                                    {{ cell_line }}
+                                </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+        
+                <!-- Date Range Filter -->
+                <div class="date_range">
+                    <label><strong>Sort Samples By Date</strong></label>
+                    
+                    <div>
+                        <label for="start_date">Starting Date:</label>
+                        <input type="date" id="start_date" name="start_date" pattern="\d{4}-\d{2}-\d{2}">
+                    </div>
+                
+                    <div>
+                        <label for="end_date">Ending Date:</label>
+                        <input type="date" id="end_date" name="end_date" pattern="\d{4}-\d{2}-\d{2}">
+                    </div>
+                </div>
+                
+                <!-- Infection Status Filter -->
+                <div>
+                    <select name="infection_status" id="infection_status">
+                        <option style="color: #6200EE; font: bolder; font-size: larger;" value="">Wolbachia Infection</option>
+                        {% for infection in infections %}
+                            {% if infection %}
+                                <option value="{{ infection }}" >
+                                    {{ infection }}
+                                </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Users Filter -->
+                <div>
+                    <select name="users" id="users_samples">
+                        <option style="color: #6200EE; font: bolder; font-size: larger;" value="">Lab Member</option>
+                        {% for user in users %}
+                                <option value="{{ user }}" >
+                                    {{ user }}
+                                </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Plate Number Filter -->
+                <div>
+                    <select name="plate_num" id="plate_num">
+                        <option style="color: #6200EE; font: bolder; font-size: larger;" value="">Plate Number</option>
+                        {% for num in plate_num %}
+                                <option value="{{ num }}" >
+                                    {{ num }}
+                                </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+
+                <div>
+                   <button type="submit" id="submit_btn" class="query_btn">Apply Filter</button>
+                </div>
+            </form>
+
+           <br>     
+     </div>
+    
+    
+    {% endblock %}

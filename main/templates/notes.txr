@@ -1,0 +1,42 @@
+<form method="POST" action="" name="exp_selection" class="exp-selection-form">
+                <ul class = 'exp_list'>
+                    {% for experiment in experiments %}
+                        <li class="item">
+                            <label  for="exp_{{ loop.index }}">{{ experiment }}</label>
+                            <input class='item' type="radio" id="exp_{{ loop.index }}" name="exp_selection" value="{{ experiment }}" required>
+                        </li>
+                    {% endfor %}
+                </ul>
+                
+                <!-- Submit button to submit the form -->
+                <input id="submit_btn" type="submit" value="Select">
+</form>
+
+    <div class="welcome">
+
+        <div class="welcome_message_background">
+            <h1 id="welcome_message">Russell Lab Titer Pipeline Program</h1>
+        </div>
+
+        <div class="experiments">
+
+            <h3 id="welcome_message2">Select from active experiments</h4>
+                <div class="experiments_listed">
+                    <form method="POST" action="" name="exp_selection" class="exp-selection-form">
+                        <ul class = 'exp_list'>
+                            {% for experiment in experiments %}
+                                <li class="item">
+                                    <label  for="exp_{{ loop.index }}">{{ experiment }}</label>
+                                    <input class='item' type="radio" id="exp_{{ loop.index }}" name="exp_selection" value="{{ experiment }}" required>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                                    
+                            <!-- Submit button to submit the form -->
+                            <input id="submit_btn" type="submit" value="Select">
+                    </form>
+
+                </div>
+
+        </div>
+    </div>
