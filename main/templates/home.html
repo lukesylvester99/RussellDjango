@@ -101,6 +101,17 @@
                     </select>
                 </div>
 
+                <!-- Seq Run Filter -->
+                <div>
+                    <select name="seq_run" id="seq_run">
+                        <option style="color: #6200EE; font: bolder; font-size: larger;" value="">Sequencing Run</option>
+                        {% for run in seq_runs %}
+                                <option value="{{ run }}" >
+                                    {{ run }}
+                                </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
                 <div>
                    <button type="submit" id="submit_btn" class="query_btn">Apply Filter</button>

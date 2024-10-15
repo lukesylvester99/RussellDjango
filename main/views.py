@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect,  get_object_or_404
-from main.models import Experiment, Sample, Sample_Metadata, Read_Pair
+from main.models import Experiment, Sample, Sample_Metadata, Read_Pair, Titer
 import csv
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
@@ -45,13 +45,20 @@ def home(request):
     plate_num_value = [num['plate_number'] for num in plate_num_dict] 
     unique_plate_num_value = list(set(plate_num_value)) #filters so each num is only represented once
     
+    # Collect unique sequencing runs from titer
+    seq_runs = Titer.objects.values("sequencing_run")
+    unique_seq_runs = set()
+    for i in seq_runs:
+        unique_seq_runs.add(i["sequencing_run"])
+
     #passed to html form
     vars = {
         "experiments":experiments_value,
         'infections':unique_infections, 
         'cell_lines':unique_cell_lines,
         "users":unique_users,
-        "plate_num":unique_plate_num_value }
+        "plate_num":unique_plate_num_value,
+        "seq_runs":unique_seq_runs}
 
     return render(request, "home.html", vars)
 
@@ -128,6 +135,7 @@ def filter_samples(request):
     infection_status = request.POST.get('infection_status', None)
     users = request.POST.get('users', None)
     plate_num = request.POST.get('plate_num', None)
+    seq_run = request.POST.get('seq_run', None)
 
 
     # Filtering by cell line from Sample_Metadata JSON field
@@ -152,12 +160,17 @@ def filter_samples(request):
     # Filtering by plate number from Read_Pair model
     if plate_num:
         samples = samples.filter(read_pair__plate_number=plate_num)
+    
+    # Filtering by seq run from Titer model
+    if seq_run:
+        samples = samples.filter(titer__sequencing_run=seq_run)
 
     # Get all related metadata and read pairs for the filtered samples
     #have to filter the models by sample_id since that is the foreign key in the models
     sample_ids = samples.values_list('id', flat=True) 
     metadata = Sample_Metadata.objects.filter(sample_id__in=sample_ids) 
     read_pairs = Read_Pair.objects.filter(sample_id__in=sample_ids)
+    seq_runs = Titer.objects.filter(sample_id__in=sample_ids)
 
     #passed to html form
     vars = {
@@ -165,6 +178,7 @@ def filter_samples(request):
         "samples": samples,
         "metadata": metadata,  
         "read_pairs": read_pairs,
+        "seq_runs":seq_runs,
         
         #copy the filter criteria from the homepage and post it to the hidden form. 
         #this is needed for the export_csv route, so that it can reapply the same filter for the csv file
@@ -173,9 +187,8 @@ def filter_samples(request):
         'end_date':end_date,
         "infection":infection_status,
         "users":users,
-        "plate_num":plate_num,
-
-        }
+        "plate_num":plate_num,  
+        "seq_runs":seq_runs,            }
 
     return render(request, 'filtered_samples.html', vars)
 
@@ -248,3 +261,14 @@ def export_csv_query(request):
         writer.writerow([sample.sample_id, cell_line, infection, sample.created_date, plate_number, read1_path, read2_path])
 
     return response
+
+
+"""Allows user to visualize dynamic graphs of the titer results"""
+
+@login_required(login_url='login')  # Redirect to the login page if not authenticated
+def titer(request):
+    None
+
+    return render(request, "samples_list.html", {'experiment': experiment, 'samples': samples, 'metadata':metadata})
+ 
+    
