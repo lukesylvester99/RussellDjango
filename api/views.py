@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from ninja import NinjaAPI, Schema
 from main.models import Sample, Read_Pair, Sample_Metadata, Titer
+import pprint
 
 api = NinjaAPI()
 
@@ -43,43 +44,30 @@ def get_cell_type(request, sample_id: str):
         return {"success": False, "message": "Sample ID not found"}
     
 
-class TiterSchema(Schema):
-    sample_id: str
-    sequencing_run: str
-    wri_mean_depth: int
-    dmel_mean_depth: int
-    wri_titer: int
-    total_reads: int
-    mapped_reads: int
-    duplicate_reads: int
-    wmel_mean_depth: int
-    wwil_mean_depth: int
-    wmel_titer: int
-    wwil_titer: int
-    dsim_mean_depth: int
-
 @api.post("/receive-titer/")
-def receive_paths(request, payload: TiterSchema):
+def receive_titer(request, payload: list[dict]):
+    pprint.pprint(payload)
     try:
-        # Extract values from the payload
-        sample_id = payload.sample_id
-        sequencing_run = payload.sequencing_run
-        wri_mean_depth = payload.wri_mean_depth
-        dmel_mean_depth = payload.dmel_mean_depth
-        wri_titer = payload.wri_titer
-        total_reads = payload.total_reads
-        mapped_reads = payload.mapped_reads
-        duplicate_reads = payload.duplicate_reads
-        wmel_mean_depth = payload.wmel_mean_depth
-        wwil_mean_depth = payload.wwil_mean_depth
-        wmel_titer = payload.wmel_titer
-        wwil_titer = payload.wwil_titer
-        dsim_mean_depth = payload.dsim_mean_depth
+        for row in payload:
+            sample_id = row.get('SampleID')
+            sequencing_run = row.get('sequencing_run')
+            wri_mean_depth = float(row.get('wri_mean_depth') or 0.0)
+            dmel_mean_depth = float(row.get('dmel_mean_depth') or 0.0)
+            wri_titer = float(row.get('wri_titer') or 0.0)
+            total_reads = int(row.get('total_reads') or 0)
+            mapped_reads = int(row.get('mapped_reads') or 0)
+            duplicate_reads = int(row.get('duplicate_reads') or 0)
+            wmel_mean_depth = float(row.get('wmel_mean_depth') or 0.0)
+            wwil_mean_depth = float(row.get('wwil_mean_depth') or 0.0)
+            wmel_titer = float(row.get('wmel_titer') or 0.0)
+            wwil_titer = float(row.get('wwil_titer') or 0.0)
+            dsim_mean_depth = float(row.get('dsim_mean_depth') or 0.0)
 
-        sample = Sample.objects.get(sample_id=sample_id)
-        titer, created = Titer.objects.update_or_create(
-            sample_id=sample,
-            defaults={
+            try:
+                sample = Sample.objects.get(sample_id=sample_id)
+                Titer.objects.update_or_create(
+                    sample_id=sample,
+                    defaults={
                         "sequencing_run": sequencing_run,
                         "wri_mean_depth": wri_mean_depth,
                         "dmel_mean_depth": dmel_mean_depth,
@@ -93,9 +81,12 @@ def receive_paths(request, payload: TiterSchema):
                         "wwil_titer": wwil_titer,
                         "dsim_mean_depth": dsim_mean_depth
                     }
-        )
-        return {"success": True, "message": "Titers received and saved!"}
+                )
+            except Sample.DoesNotExist:
+                return {"success": False, "message": f"Sample ID {sample_id} not found!"}
+
+        return {"success": True, "message": "Titer data received and saved!"}
     
-    except Sample.DoesNotExist:
-        return {"success": False, "message": "Sample ID not found!"}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
     
