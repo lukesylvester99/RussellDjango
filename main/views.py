@@ -170,7 +170,7 @@ def filter_samples(request):
     sample_ids = samples.values_list('id', flat=True) 
     metadata = Sample_Metadata.objects.filter(sample_id__in=sample_ids) 
     read_pairs = Read_Pair.objects.filter(sample_id__in=sample_ids)
-    seq_runs = Titer.objects.filter(sample_id__in=sample_ids)
+    seq_runs = list(Titer.objects.filter(sample_id__in=sample_ids).values_list('sequencing_run', flat=True).distinct())
 
     #passed to html form
     vars = {
@@ -178,7 +178,7 @@ def filter_samples(request):
         "samples": samples,
         "metadata": metadata,  
         "read_pairs": read_pairs,
-        "seq_runs":seq_runs,
+
         
         #copy the filter criteria from the homepage and post it to the hidden form. 
         #this is needed for the export_csv route, so that it can reapply the same filter for the csv file
@@ -203,6 +203,10 @@ def export_csv_query(request):
     end_date = request.GET.get('end_date', None)
     users = request.GET.get('users', None)
     plate_num = request.GET.get('plate_num', None)
+    seq_run = str(request.GET.get('seq_runs', None)) #returning a list, which is messing up the filter
+    
+    if seq_run and seq_run.startswith('[') and seq_run.endswith(']'):
+        seq_run = seq_run.strip("[]").replace("'", "").strip()
 
     """Repeating filter that was applied on homepage"""
     # Initialize the samples QuerySet
@@ -230,6 +234,14 @@ def export_csv_query(request):
     # Filtering by plate number from Read_Pair model
     if plate_num:
         samples = samples.filter(read_pair__plate_number=plate_num)
+    
+    # Filtering by seq run from Titer model
+    if seq_run:
+        samples = samples.filter(titer__sequencing_run=seq_run)
+    
+    print(f"seq_run: {seq_run}")
+    print(f"cell line: {cell_line}")
+    print(f"Filtered samples: {samples}")
 
     # Get all related metadata and read pairs for the filtered samples
     sample_ids = samples.values_list('id', flat=True)
@@ -267,8 +279,14 @@ def export_csv_query(request):
 
 @login_required(login_url='login')  # Redirect to the login page if not authenticated
 def titer(request):
-    None
+    # Get filter criteria from the GET request
+    cell_line = request.GET.get('cell_line', None)
+    infection_status = request.GET.get('infection_status', None)
+    start_date = request.GET.get('start_date', None)
+    end_date = request.GET.get('end_date', None)
+    users = request.GET.get('users', None)
+    plate_num = request.GET.get('plate_num', None)
 
-    return render(request, "samples_list.html", {'experiment': experiment, 'samples': samples, 'metadata':metadata})
+    return render(request, "titer.html", {})
  
     
