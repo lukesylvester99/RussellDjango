@@ -3,7 +3,16 @@ import os
 from main.models import Experiment, Sample, Sample_Metadata, Read_Pair  
 from django.core.management.base import BaseCommand
 from datetime import datetime 
+import logging
 
+#setting up log info
+log_dir = 'logs'
+log_file = os.path.join(log_dir, 'import_json.log')
+logging.basicConfig(
+    filename=log_file,
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger('api')
 
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
@@ -41,7 +50,7 @@ class Command(BaseCommand):
             #create exp
             experiment, created = Experiment.objects.get_or_create(name=experiment_name) 
             if created: #bool = true if exp *didnt* exist before
-                self.stdout.write(f"Created New Experiment: {experiment.name}")
+                logger.info(f"Created New Experiment: {experiment.name}")
 
         ################################
         # Part 3: Handle Samples Model #
@@ -60,10 +69,10 @@ class Command(BaseCommand):
                     datetime.strptime(created_date, '%Y-%m-%d')  # Just to validate the format
                 except ValueError:
                     # Throw an error if the date format is incorrect
-                    self.stdout.write(self.style.ERROR(f"Invalid date format for sample '{sample_id}': {created_date}"))
+                    logger.info(self.style.ERROR(f"Invalid date format for sample '{sample_id}': {created_date}"))
             else:
                 # throw an error if 'Date Collected' is missing
-                self.stdout.write(self.style.ERROR(f"Missing 'Date Collected' for sample '{sample_id}'"))
+                logger.info(self.style.ERROR(f"Missing 'Date Collected' for sample '{sample_id}'"))
 
             #Part 3C: DB Commit
             sample, created = Sample.objects.update_or_create(
@@ -75,9 +84,9 @@ class Command(BaseCommand):
                 })
             # Check if a new sample was created
             if created:
-                print(f"Created New Sample: {sample.sample_id}")
+                logger.info(f"Created New Sample: {sample.sample_id}")
             else:
-                print(f"Updated Sample: {sample.sample_id}")
+                logger.info(f"Updated Sample: {sample.sample_id}")
 
         #################################
         # Part 4: Handle Metadata Model #
@@ -102,9 +111,9 @@ class Command(BaseCommand):
                 defaults={'metadata': metadata})
 
             if created:
-                self.stdout.write(f"Created New Metadata for Sample: {sample.sample_id}")
+                logger.info(f"Created New Metadata for Sample: {sample.sample_id}")
             else:
-                self.stdout.write(f"Updated Metadata for Sample: {sample.sample_id}")
+                logger.info(f"Updated Metadata for Sample: {sample.sample_id}")
 
 
         ##################################
@@ -125,4 +134,11 @@ class Command(BaseCommand):
                 })
             
             if created:
-                self.stdout.write(f"Created New Read Pair for Sample: {sample.sample_id}")
+                logger.info(f"Created New Read Pair for Sample: {sample.sample_id}")
+
+        ##################################
+        # Part 6: Confirm script finished #
+        ##################################
+        logging.info("\n")
+        logging.info("FINISHED RUNNING SCRIPT")  # to help separate out the logging file
+        logging.info("\n")

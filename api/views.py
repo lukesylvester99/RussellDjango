@@ -1,7 +1,17 @@
 from django.shortcuts import render
 from ninja import NinjaAPI, Schema
 from main.models import Sample, Read_Pair, Sample_Metadata, Titer
-import pprint
+import logging
+import os
+
+#setting up log info
+log_dir = 'logs'
+log_file = os.path.join(log_dir, 'api.log')
+logging.basicConfig(
+    filename=log_file,
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger('api')
 
 api = NinjaAPI()
 
@@ -21,11 +31,17 @@ def receive_paths(request, payload: PathSchema):
         sample = Sample.objects.get(sample_id=sample_id)
         read_pair, created = Read_Pair.objects.update_or_create(
             sample_id=sample,
-            defaults={'read1_path': read1_path, 'read2_path': read2_path}
-        )
+            defaults={'read1_path': read1_path, 'read2_path': read2_path})
+        
+        if created:
+            logger.info(f"New read pair created for sample: {sample_id}")
+        else:
+            logger.info(f"Read pair for sample: {sample_id} updated")
+
         return {"success": True, "message": "Paths received and saved!"}
     
     except Sample.DoesNotExist:
+        logger.error(f"Sample ID {sample_id} not found!")
         return {"success": False, "message": "Sample ID not found!"}
     
 
@@ -46,7 +62,6 @@ def get_cell_type(request, sample_id: str):
 
 @api.post("/receive-titer/")
 def receive_titer(request, payload: list[dict]):
-    pprint.pprint(payload)
     try:
         for row in payload:
             sample_id = row.get('SampleID')
@@ -80,13 +95,17 @@ def receive_titer(request, payload: list[dict]):
                         "wmel_titer": wmel_titer,
                         "wwil_titer": wwil_titer,
                         "dsim_mean_depth": dsim_mean_depth
-                    }
-                )
+                    })
+                
+                logger.info(f"Titer data for sample {sample_id} updated successfully")
             except Sample.DoesNotExist:
+                logger.error(f"Sample ID {sample_id} not found!")
                 return {"success": False, "message": f"Sample ID {sample_id} not found!"}
-
+            
+        logger.info("All titer data processed and saved successfully")
         return {"success": True, "message": "Titer data received and saved!"}
     
     except Exception as e:
+        logger.error(f"Error processing titer data: {str(e)}")
         return {"success": False, "message": str(e)}
     
