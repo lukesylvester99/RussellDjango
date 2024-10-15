@@ -3,6 +3,7 @@ from main.models import Experiment, Sample, Sample_Metadata, Read_Pair, Titer
 import csv
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 
 
 """home page that contains the form for selecting samples associated 
@@ -172,6 +173,10 @@ def filter_samples(request):
     read_pairs = Read_Pair.objects.filter(sample_id__in=sample_ids)
     seq_runs = list(Titer.objects.filter(sample_id__in=sample_ids).values_list('sequencing_run', flat=True).distinct())
 
+    # Store the filtered sample IDs in cache so I can get them in titer()
+    cache_key = f"filtered_samples_{request.user.id}"
+    cache.set(cache_key, sample_ids, timeout=3600)  # Cache for 1 hour
+    
     #passed to html form
     vars = {
         #holds sample information from the filter that was created on homepage
@@ -205,7 +210,7 @@ def export_csv_query(request):
     plate_num = request.GET.get('plate_num', None)
     seq_run = str(request.GET.get('seq_runs', None)) #returning a list, which is messing up the filter
     
-    if seq_run and seq_run.startswith('[') and seq_run.endswith(']'):
+    if seq_run and seq_run.startswith('[') and seq_run.endswith(']'): #strips off list notation
         seq_run = seq_run.strip("[]").replace("'", "").strip()
 
     """Repeating filter that was applied on homepage"""
@@ -238,15 +243,13 @@ def export_csv_query(request):
     # Filtering by seq run from Titer model
     if seq_run:
         samples = samples.filter(titer__sequencing_run=seq_run)
-    
-    print(f"seq_run: {seq_run}")
-    print(f"cell line: {cell_line}")
-    print(f"Filtered samples: {samples}")
 
     # Get all related metadata and read pairs for the filtered samples
     sample_ids = samples.values_list('id', flat=True)
     metadata = Sample_Metadata.objects.filter(sample_id__in=sample_ids)
     read_pairs = Read_Pair.objects.filter(sample_id__in=sample_ids)
+
+
 
     # Create the CSV response
     response = HttpResponse(content_type='text/csv')
@@ -279,14 +282,34 @@ def export_csv_query(request):
 
 @login_required(login_url='login')  # Redirect to the login page if not authenticated
 def titer(request):
-    # Get filter criteria from the GET request
-    cell_line = request.GET.get('cell_line', None)
-    infection_status = request.GET.get('infection_status', None)
-    start_date = request.GET.get('start_date', None)
-    end_date = request.GET.get('end_date', None)
-    users = request.GET.get('users', None)
-    plate_num = request.GET.get('plate_num', None)
+    # Retrieve the cached sample IDs
+    cache_key = f"filtered_samples_{request.user.id}"
+    sample_ids = cache.get(cache_key)
 
-    return render(request, "titer.html", {})
+    if not sample_ids:
+        return HttpResponse("No samples found. Return to home and repeat filter") # Handle case when there are no cached results
+
+    titer_data = Titer.objects.filter(sample_id__in=sample_ids)
+
+    titer_dict ={}
+    for obj in titer_data:
+        titer_dict[obj.sample_id.sample_id] = {
+            "wri_mean_depth": obj.wri_mean_depth,  # Assuming it's 'wri_mean_depth' not 'ri_mean_depth'
+            "dmel_mean_depth": obj.dmel_mean_depth,
+            "wri_titer": obj.wri_titer,
+            "total_reads": obj.total_reads,
+            "mapped_reads": obj.mapped_reads,
+            "duplicate_reads": obj.duplicate_reads,
+            "wmel_mean_depth": obj.wmel_mean_depth,
+            "wwil_mean_depth": obj.wwil_mean_depth,
+            "wmel_titer": obj.wmel_titer,
+            "wwil_titer": obj.wwil_titer,
+            "dsim_mean_depth": obj.dsim_mean_depth}
+
+
+    print(titer_dict)
+
+    return render(request, 'titer.html', {'titer_data': titer_data})
+
  
     
