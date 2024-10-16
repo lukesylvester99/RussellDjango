@@ -4,7 +4,7 @@ import csv
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
-
+from main.dash_apps.finished_apps import simpleexample
 
 """home page that contains the form for selecting samples associated 
 with an experiment, as well as the custom filter"""
@@ -286,15 +286,15 @@ def titer(request):
     cache_key = f"filtered_samples_{request.user.id}"
     sample_ids = cache.get(cache_key)
 
-    if not sample_ids:
-        return HttpResponse("No samples found. Return to home and repeat filter") # Handle case when there are no cached results
+    #if not sample_ids:
+        #return HttpResponse("No samples found. Return to home and repeat filter") # Handle case when there are no cached results
 
     titer_data = Titer.objects.filter(sample_id__in=sample_ids)
 
     titer_dict ={}
     for obj in titer_data:
         titer_dict[obj.sample_id.sample_id] = {
-            "wri_mean_depth": obj.wri_mean_depth,  # Assuming it's 'wri_mean_depth' not 'ri_mean_depth'
+            "wri_mean_depth": obj.wri_mean_depth, 
             "dmel_mean_depth": obj.dmel_mean_depth,
             "wri_titer": obj.wri_titer,
             "total_reads": obj.total_reads,
@@ -306,8 +306,17 @@ def titer(request):
             "wwil_titer": obj.wwil_titer,
             "dsim_mean_depth": obj.dsim_mean_depth}
 
+    sample_names = []
+    for i in titer_dict:
+        sample_names.append(i)
+    
+    # Store the titer info for filtered samples in cache so I can get them in dash
+    cache_key = f"sample_names_{request.user.id}"
+    cache.set(cache_key, sample_names, timeout=3600)  # Cache for 1 hour
 
-    print(titer_dict)
+    # Store the titer info for filtered samples in cache so I can get them in dash
+    cache_key = f"titer_info_{request.user.id}"
+    cache.set(cache_key, titer_dict, timeout=3600)  # Cache for 1 hour
 
     return render(request, 'titer.html', {'titer_data': titer_data})
 

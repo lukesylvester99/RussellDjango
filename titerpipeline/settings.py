@@ -40,7 +40,10 @@ INSTALLED_APPS = [
     'main',
     'members',
     'ninja',
-    'api'
+    'api',
+    'django_plotly_dash.apps.DjangoPlotlyDashConfig',
+    'channels',
+    'channels_redis',
 ]
 
 MIDDLEWARE = [
@@ -51,6 +54,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_plotly_dash.middleware.BaseMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware'
 ]
 
 MESSAGE_TAGS = {
@@ -135,3 +140,32 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATICFILES_DIRS = [BASE_DIR/ "static"]
+
+#DASH CONFIG
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
+ASGI_APPLICATION = 'titerpipeline.routing.applications'
+CHANNEL_LAYERS ={
+    "default": {
+        'BACKEND': "channels_redis.core.RedisChannelLayer",
+        "CONFIG":{
+            'hosts':[('127.0.0.1', 8000),],
+        },
+    },
+}
+
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'django_plotly_dash.finders.DashAssetFinder',
+    'django_plotly_dash.finders.DashComponentFinder'
+]
+
+PLOTLY_COMPONENTS = [
+
+    'dash_core_components',
+    'dash_html_components',
+    'dash_renderer',
+
+    'dpd_components'
+]
