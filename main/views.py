@@ -277,39 +277,5 @@ def export_csv_query(request):
 
     return response
 
-
-"""Allows user to visualize dynamic graphs of the titer results"""
-
-"""@login_required(login_url='login')  # Redirect to the login page if not authenticated
-def titer(request):
-    # Retrieve the cached sample IDs
-    cache_key = f"filtered_samples_{request.user.id}"
-    sample_ids = cache.get(cache_key)
-
-    if not sample_ids:
-        return HttpResponse("No samples found. Return to home and repeat filter") # Handle case when there are no cached results
-
-    titer_data = Titer.objects.filter(sample_id__in=sample_ids)
-
-    titer_dict ={}
-    for obj in titer_data:
-        titer_dict[obj.sample_id.sample_id] = {
-            "wri_mean_depth": obj.wri_mean_depth,  # Assuming it's 'wri_mean_depth' not 'ri_mean_depth'
-            "dmel_mean_depth": obj.dmel_mean_depth,
-            "wri_titer": obj.wri_titer,
-            "total_reads": obj.total_reads,
-            "mapped_reads": obj.mapped_reads,
-            "duplicate_reads": obj.duplicate_reads,
-            "wmel_mean_depth": obj.wmel_mean_depth,
-            "wwil_mean_depth": obj.wwil_mean_depth,
-            "wmel_titer": obj.wmel_titer,
-            "wwil_titer": obj.wwil_titer,
-            "dsim_mean_depth": obj.dsim_mean_depth}
-
-
-    print(titer_dict)
-
-    return render(request, 'titer.html', {'titer_data': titer_data})"""
-
  
     
