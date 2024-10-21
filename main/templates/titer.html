@@ -1,11 +1,22 @@
 {% extends "base.html" %}
 
-    {% block content %}
+{% block content %}
+<div class="titer-container">
+    <h2 class="titer-title">Select a Titer Metric</h2>
+    
+    <div class="titer-values">
+        <ul class="titer-list">
+            {% for titer in titer_values %}
+                <li>
+                    <a class="titer-link" href="/titer/{{ titer }}/">{{ titer|title }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
 
-    {% for sample in sample_ids %}
+    <div class="chart-container">
+        {{ chart_div | safe }}
+    </div>
 
-    <h1 style="color: white;">{{sample}}</h1>
-
-    {% endfor %}
-
-    {% endblock %}
+{% endblock %}

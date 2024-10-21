@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'main',
     'members',
     'ninja',
-    'api'
+    'api',
+    'titer',
 ]
 
 MIDDLEWARE = [

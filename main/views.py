@@ -280,7 +280,7 @@ def export_csv_query(request):
 
 """Allows user to visualize dynamic graphs of the titer results"""
 
-@login_required(login_url='login')  # Redirect to the login page if not authenticated
+"""@login_required(login_url='login')  # Redirect to the login page if not authenticated
 def titer(request):
     # Retrieve the cached sample IDs
     cache_key = f"filtered_samples_{request.user.id}"
@@ -309,7 +309,7 @@ def titer(request):
 
     print(titer_dict)
 
-    return render(request, 'titer.html', {'titer_data': titer_data})
+    return render(request, 'titer.html', {'titer_data': titer_data})"""
 
  
     

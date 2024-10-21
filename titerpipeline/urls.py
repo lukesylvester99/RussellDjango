@@ -8,5 +8,6 @@ urlpatterns = [
     path('', include("main.urls") ),
     path('members/', include("members.urls") ),
     path('members/', include("django.contrib.auth.urls") ),
-    path('api/', api.urls)
+    path('api/', api.urls),
+    path('titer/',include("titer.urls")),
 ]
