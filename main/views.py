@@ -41,6 +41,13 @@ def home(request):
             if key == 'Initials':
                 unique_users.add(value)
 
+    # Collect unique Media from metadata
+    unique_media = set()
+    for meta in metadata:
+        for key, value in meta.metadata.items():
+            if key == 'media':
+                unique_media.add(value)
+
     #holds plate numbers in data
     plate_num_dict = Read_Pair.objects.values("plate_number")
     plate_num_value = [num['plate_number'] for num in plate_num_dict] 
@@ -59,7 +66,8 @@ def home(request):
         'cell_lines':unique_cell_lines,
         "users":unique_users,
         "plate_num":unique_plate_num_value,
-        "seq_runs":unique_seq_runs}
+        "seq_runs":unique_seq_runs,
+        "media":unique_media}
 
     return render(request, "home.html", vars)
 
@@ -137,7 +145,7 @@ def filter_samples(request):
     users = request.POST.get('users', None)
     plate_num = request.POST.get('plate_num', None)
     seq_run = request.POST.get('seq_run', None)
-
+    media = request.POST.get('media', None)
 
     # Filtering by cell line from Sample_Metadata JSON field
     if cell_line:
@@ -157,6 +165,10 @@ def filter_samples(request):
     # Filtering by user/lab member
     if users:
         samples = samples.filter(sample_metadata__metadata__Initials=users)
+    
+    # Filtering by media type
+    if media:
+        samples = samples.filter(sample_metadata__metadata__media=media)
 
     # Filtering by plate number from Read_Pair model
     if plate_num:
@@ -193,7 +205,8 @@ def filter_samples(request):
         "infection":infection_status,
         "users":users,
         "plate_num":plate_num,  
-        "seq_runs":seq_runs,            }
+        "seq_runs":seq_runs,   
+        "media":media,}
 
     return render(request, 'filtered_samples.html', vars)
 

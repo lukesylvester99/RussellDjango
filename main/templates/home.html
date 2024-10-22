@@ -89,6 +89,18 @@
                     </select>
                 </div>
 
+                <!-- Media Filter -->
+                <div>
+                    <select name="media" id="users_samples">
+                        <option style="color: #6200EE; font: bolder; font-size: larger;" value="">Media</option>
+                        {% for m in media %}
+                                <option value="{{ m }}" >
+                                    {{ m }}
+                                </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
                 <!-- Plate Number Filter -->
                 <div>
                     <select name="plate_num" id="plate_num">
